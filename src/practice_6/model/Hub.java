@@ -1,0 +1,73 @@
+package practice_6.model;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Hub extends Device {
+    public static final int DEFAULT_MAX_DEVICES = 15;
+
+    int maxDevices = DEFAULT_MAX_DEVICES;
+
+    private final String ipAddress;
+    private final List<String> connectedDeviceIds = new ArrayList<>();
+
+    public Hub(String id, String name, String ipAddress) {
+        super(id, name);
+        this.ipAddress = ipAddress;
+    }
+
+    void registerDevice(String deviceId) {
+        if (!online) {
+            throw new IllegalStateException("хаб не працює");
+        }
+        if (connectedDeviceIds.contains(deviceId)) {
+            throw new IllegalArgumentException("пристрій " + deviceId + " вже підключено");
+        }
+        if (connectedDeviceIds.size() >= maxDevices) {
+            throw new IllegalStateException("досягнуто ліміт пристроїв (" + maxDevices + ")");
+        }
+        connectedDeviceIds.add(deviceId);
+    }
+
+    public void disconnectDevice(String deviceId) {
+        connectedDeviceIds.remove(deviceId);
+    }
+
+    @Override
+    public void reboot() {
+        online = false;
+        log("Hub.reboot(): перезавантаження, відключено " + connectedDeviceIds.size() + " пристроїв");
+        online = true;
+        log("Hub.reboot(): пристрої підключено знову");
+    }
+
+    @Override
+    public String getCategory() {
+        return "керування";
+    }
+
+    @Override
+    public void performMainAction() {
+        log("синхронізовано " + connectedDeviceIds.size() + " пристроїв");
+    }
+
+    @Override
+    public String getStatus() {
+        return connectionStatus() + ", підключено " + connectedDeviceIds.size() + "/" + maxDevices;
+    }
+
+    @Override
+    public double getPowerUsage() {
+        return 5;
+    }
+
+    public List<String> getConnectedDeviceIds() {
+        return Collections.unmodifiableList(connectedDeviceIds);
+    }
+
+    @Override
+    protected String fieldsInfo() {
+        return super.fieldsInfo() + ", ipAddress='" + ipAddress + "', connectedDeviceIds=" + connectedDeviceIds;
+    }
+}
